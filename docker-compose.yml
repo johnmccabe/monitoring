@@ -1,0 +1,45 @@
+version: "3.3"
+services:
+    influxdb:
+        ports:
+            - 8086:8086
+            - 8083:8083
+        image: influxdb:1.2.0
+        environment:
+            INFLUXDB_ADMIN_ENABLED: "true"
+        command: -config /etc/influxdb/influxdb.conf
+        networks:
+            - monitoring
+        configs:
+          - source: influxdb_config
+            target: /etc/influxdb/influxdb.conf
+        volumes:
+          - influxdbdata:/var/lib/influxdb
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 20
+                window: 380s
+        # secrets:
+        #     - basic-auth-user
+        #     - basic-auth-password
+    # End services
+
+configs:
+     influxdb_config:
+         file: ./influxdb/influxdb.conf
+
+volumes:
+  influxdbdata:
+
+networks:
+    monitoring:
+        driver: overlay
+        attachable: true
+
+# secrets:
+#     basic-auth-user:
+#         external: true
+#     basic-auth-password:
+#         external: true
