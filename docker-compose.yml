@@ -3,35 +3,90 @@ services:
     influxdb:
         ports:
             - 8086:8086
-            - 8083:8083
-        image: influxdb:1.2.0
+        image: influxdb:1.6
         environment:
-            INFLUXDB_ADMIN_ENABLED: "true"
+            ENV INFLUXDB_GRAFANA_DB: datasource
+            ENV INFLUXDB_GRAFANA_USER: datasource
+            ENV INFLUXDB_GRAFANA_PW: datasource
         command: -config /etc/influxdb/influxdb.conf
         networks:
             - monitoring
         configs:
-          - source: influxdb_config
-            target: /etc/influxdb/influxdb.conf
+            - source: influxdb_config
+              target: /etc/influxdb/influxdb.conf
         volumes:
-          - influxdbdata:/var/lib/influxdb
+            - influxdbdata:/var/lib/influxdb
         deploy:
             restart_policy:
                 condition: on-failure
                 delay: 5s
                 max_attempts: 20
                 window: 380s
-        # secrets:
-        #     - basic-auth-user
-        #     - basic-auth-password
-    # End services
+    chronograf:
+        ports:
+            - 8888:8888
+        image: chronograf:1.5
+        environment:
+            INFLUXDB_URL: http://influxdb:8086
+        networks:
+            - monitoring
+        volumes:
+            - chronograf:/var/lib/chronograf
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 20
+                window: 380s
+    grafana:
+        ports:
+            - 3000:3000
+        image: grafana/grafana:5.2.1
+        environment:
+            GF_DATABASE_TYPE: sqlite3
+        networks:
+            - monitoring
+        configs:
+            - source: grafana_config
+              target: /etc/grafana/grafana.ini
+        volumes:
+            - grafana:/var/lib/grafana
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 20
+                window: 380s
+    telegraf:
+        ports:
+            - 8125:8125
+            - 6060:6060/udp
+            - 8094:8094/tcp
+        image: johnmccabe/synology-telegraf
+        configs:
+            - source: telegraf_config
+              target: /etc/telegraf/telegraf.conf
+        networks:
+            - monitoring
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 20
+                window: 380s
 
 configs:
      influxdb_config:
          file: ./influxdb/influxdb.conf
+     telegraf_config:
+         file: ./telegraf/telegraf.conf
+     grafana_config:
+         file: ./grafana/grafana.ini
 
 volumes:
   influxdbdata:
+  chronograf:
+  grafana:
 
 networks:
     monitoring:
