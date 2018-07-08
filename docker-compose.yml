@@ -62,7 +62,7 @@ services:
             - 8125:8125
             - 6060:6060/udp
             - 8094:8094/tcp
-        image: johnmccabe/synology-telegraf
+        image: johnmccabe/synology-telegraf:1.7.1
         configs:
             - source: telegraf_config
               target: /etc/telegraf/telegraf.conf
