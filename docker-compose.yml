@@ -40,7 +40,7 @@ services:
                 window: 380s
     grafana:
         ports:
-            - 3000:3000
+                - 443:3000
         image: grafana/grafana:5.2.1
         environment:
             GF_DATABASE_TYPE: sqlite3
@@ -49,6 +49,10 @@ services:
         configs:
             - source: grafana_config
               target: /etc/grafana/grafana.ini
+            - source: cert_file
+              target: /etc/grafana/fullchain.pem
+            - source: key_file
+              target: /etc/grafana/privkey.pem
         volumes:
             - grafana:/var/lib/grafana
         deploy:
@@ -82,6 +86,10 @@ configs:
          file: ./telegraf/telegraf.conf
      grafana_config:
          file: ./grafana/grafana.ini
+     cert_file:
+         file: ./grafana/fullchain.pem
+     key_file:
+         file: ./grafana/privkey.pem
 
 volumes:
   influxdbdata:
